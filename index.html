@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>POSTURE ENFORCER</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet" />
   <style>
     :root {
       --bg: #0d0d0d;
@@ -29,11 +29,14 @@
       flex-direction: column;
       transition: background-color 0.2s, color 0.2s;
       position: relative;
+      overflow: hidden;
     }
 
     h1, h2 {
       margin: 0.5rem;
       text-align: center;
+      z-index: 1;
+      position: relative;
     }
 
     #startButton, #confirmButton {
@@ -45,6 +48,8 @@
       color: #000;
       cursor: pointer;
       transition: background 0.2s, transform 0.2s;
+      z-index: 1;
+      position: relative;
     }
 
     #startButton:hover, #confirmButton:hover {
@@ -56,21 +61,20 @@
       display: none;
       flex-direction: column;
       align-items: center;
-    }
-
-    #alert h1 {
-      font-size: 3rem;
-      margin-bottom: 1.5rem;
+      z-index: 1;
+      position: relative;
     }
 
     #countdown {
       margin-top: 1rem;
       font-size: 1.25rem;
       opacity: 0.8;
+      z-index: 1;
+      position: relative;
     }
 
     #epilepsyWarning {
-      position: absolute;
+      position: fixed;
       top: 10px;
       right: 10px;
       background-color: red;
@@ -79,16 +83,85 @@
       border-radius: 0.25rem;
       font-size: 0.9rem;
       font-weight: bold;
-      z-index: 999;
-      display: none;
+      z-index: 9999;
+      user-select: none;
     }
 
-    .flashing {
+    /* Modal styling */
+    #intervalModal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    #intervalContent {
+      background: var(--bg);
+      padding: 2rem 3rem;
+      border-radius: 1rem;
+      text-align: center;
+      color: var(--fg);
+      box-shadow: 0 0 15px var(--accent);
+      max-width: 320px;
+      width: 90%;
+    }
+
+    #intervalContent label {
+      font-size: 1.2rem;
+      display: block;
+      margin-bottom: 1rem;
+    }
+
+    #intervalInput {
+      width: 100%;
+      font-size: 1.25rem;
+      padding: 0.5rem;
+      border-radius: 0.5rem;
+      border: none;
+      outline: none;
+      text-align: center;
+      margin-bottom: 1.5rem;
+      color: #000;
+    }
+
+    #intervalSubmit {
+      background-color: var(--accent);
+      border: none;
+      color: #000;
+      font-size: 1.25rem;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    #intervalSubmit:hover {
+      background-color: #ffe53b;
+    }
+
+    /* Fullscreen flashing overlay */
+    #flashOverlay {
+      pointer-events: none; /* allow clicks to pass through */
+      position: fixed;
+      inset: 0;
+      z-index: 9998;
+      background-color: black;
+      color: yellow;
+      display: none;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
       animation: flashBG 0.25s infinite;
     }
 
-    .flashing * {
+    /* Make all text and buttons inside flashOverlay flash colors too */
+    #flashOverlay * {
       animation: flashText 0.25s infinite;
+      border-color: currentColor !important;
     }
 
     @keyframes flashBG {
@@ -113,29 +186,48 @@
 <body>
   <div id="epilepsyWarning">⚠ PHOTOSENSITIVE EPILEPSY WARNING</div>
 
-  <button id="startButton">Start Posture Watch</button>
+  <button id="startButton" style="display:none;">Start Posture Watch</button>
 
-  <div id="alert">
+  <div id="alert" style="display:none;">
     <h1>CHECK YOUR POSTURE</h1>
     <button id="confirmButton">I Fixed My Posture</button>
   </div>
 
   <div id="countdown"></div>
 
+  <!-- This overlay covers entire screen and flashes -->
+  <div id="flashOverlay" aria-hidden="true">
+    <h1>CHECK YOUR POSTURE</h1>
+    <button id="confirmButtonOverlay">I Fixed My Posture</button>
+  </div>
+
   <audio id="alertSound" src="999-social-credit-siren.mp3" loop></audio>
+
+  <!-- Modal -->
+  <div id="intervalModal">
+    <div id="intervalContent">
+      <label for="intervalInput">Set reminder interval (minutes):</label>
+      <input type="number" id="intervalInput" min="1" max="180" value="15" />
+      <button id="intervalSubmit">Set Timer</button>
+    </div>
+  </div>
 
   <script>
     const startButton = document.getElementById("startButton");
     const confirmButton = document.getElementById("confirmButton");
+    const confirmButtonOverlay = document.getElementById("confirmButtonOverlay");
     const alertDiv = document.getElementById("alert");
+    const flashOverlay = document.getElementById("flashOverlay");
     const alertSound = document.getElementById("alertSound");
     const countdownDisplay = document.getElementById("countdown");
     const epilepsyWarning = document.getElementById("epilepsyWarning");
+    const intervalModal = document.getElementById("intervalModal");
+    const intervalInput = document.getElementById("intervalInput");
+    const intervalSubmit = document.getElementById("intervalSubmit");
 
     let nextTriggerTime;
     let countdownInterval;
-
-    const REMINDER_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
+    let REMINDER_INTERVAL_MS;
 
     function formatTime(ms) {
       const totalSeconds = Math.floor(ms / 1000);
@@ -165,26 +257,42 @@
 
     function triggerReminder() {
       alertSound.play();
-      alertDiv.style.display = "flex";
-      document.body.classList.add("flashing");
+      flashOverlay.style.display = "flex";
       epilepsyWarning.style.display = "block";
+      startButton.style.display = "none";
+      alertDiv.style.display = "none";
     }
 
     function stopReminder() {
       alertSound.pause();
       alertSound.currentTime = 0;
-      alertDiv.style.display = "none";
-      document.body.classList.remove("flashing");
-      epilepsyWarning.style.display = "none";
+      flashOverlay.style.display = "none";
+      epilepsyWarning.style.display = "block";
       scheduleReminder();
     }
+
+    intervalSubmit.addEventListener("click", () => {
+      let val = parseInt(intervalInput.value, 10);
+      if (isNaN(val) || val < 1 || val > 180) {
+        alert("Please enter a valid number between 1 and 180.");
+        return;
+      }
+      REMINDER_INTERVAL_MS = val * 60 * 1000;
+      intervalModal.style.display = "none";
+      startButton.style.display = "inline-block";
+      epilepsyWarning.style.display = "block";
+    });
 
     startButton.addEventListener("click", () => {
       startButton.style.display = "none";
       scheduleReminder();
     });
 
+    confirmButtonOverlay.addEventListener("click", stopReminder);
+
+    // Also handle confirm button in alertDiv if visible (optional)
     confirmButton.addEventListener("click", stopReminder);
+
   </script>
 </body>
 </html>
