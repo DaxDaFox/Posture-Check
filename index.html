@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Posture Buddy</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #0d0d0d;
+      --fg: #f4f4f4;
+      --accent: #facc15;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg);
+      color: var(--fg);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      transition: background-color 0.2s, color 0.2s;
+    }
+
+    h1, h2 {
+      margin: 0.5rem;
+      text-align: center;
+    }
+
+    #startButton, #confirmButton {
+      font-size: 1.5rem;
+      padding: 1rem 2rem;
+      border: none;
+      border-radius: 0.5rem;
+      background-color: var(--accent);
+      color: #000;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
+    }
+
+    #startButton:hover, #confirmButton:hover {
+      transform: scale(1.05);
+      background-color: #ffe53b;
+    }
+
+    #alert {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    #alert h1 {
+      font-size: 3rem;
+      color: var(--accent);
+      margin-bottom: 1.5rem;
+    }
+
+    #countdown {
+      margin-top: 1rem;
+      font-size: 1.25rem;
+      opacity: 0.8;
+    }
+
+    .flashing {
+      animation: flash 0.5s infinite;
+    }
+
+    @keyframes flash {
+      0%   { background-color: black; color: yellow; }
+      50%  { background-color: yellow; color: black; }
+      100% { background-color: black; color: yellow; }
+    }
+  </style>
+</head>
+<body>
+  <button id="startButton">Start Posture Watch</button>
+
+  <div id="alert">
+    <h1>CHECK YOUR POSTURE</h1>
+    <button id="confirmButton">I Fixed My Posture</button>
+  </div>
+
+  <div id="countdown"></div>
+
+  <audio id="alertSound" src="999-social-credit-siren.mp3"></audio>
+
+  <script>
+    const startButton = document.getElementById("startButton");
+    const confirmButton = document.getElementById("confirmButton");
+    const alertDiv = document.getElementById("alert");
+    const alertSound = document.getElementById("alertSound");
+    const countdownDisplay = document.getElementById("countdown");
+
+    let nextTriggerTime;
+    let countdownInterval;
+    let reminderTimeout;
+    let flashing = false;
+
+    const REMINDER_INTERVAL_MS = 0.5* 60 * 1000; // 15 minutes
+
+    function formatTime(ms) {
+      const totalSeconds = Math.floor(ms / 1000);
+      const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
+      const seconds = String(totalSeconds % 60).padStart(2, '0');
+      return `${minutes}:${seconds}`;
+    }
+
+    function updateCountdown() {
+      const now = Date.now();
+      const remaining = nextTriggerTime - now;
+
+      if (remaining <= 0) {
+        countdownDisplay.textContent = "00:00";
+        clearInterval(countdownInterval);
+        triggerReminder();
+      } else {
+        countdownDisplay.textContent = `Next reminder in ${formatTime(remaining)}`;
+      }
+    }
+
+    function scheduleReminder() {
+      nextTriggerTime = Date.now() + REMINDER_INTERVAL_MS;
+      updateCountdown();
+      countdownInterval = setInterval(updateCountdown, 500);
+    }
+
+    function triggerReminder() {
+      alertSound.play();
+      alertDiv.style.display = "flex";
+      document.body.classList.add("flashing");
+    }
+
+    function stopReminder() {
+      alertSound.pause();
+      alertSound.currentTime = 0;
+      alertDiv.style.display = "none";
+      document.body.classList.remove("flashing");
+      scheduleReminder();
+    }
+
+    startButton.addEventListener("click", () => {
+      startButton.style.display = "none";
+      scheduleReminder();
+    });
+
+    confirmButton.addEventListener("click", stopReminder);
+  </script>
+</body>
+</html>
