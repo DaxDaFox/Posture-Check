@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Posture Buddy</title>
+  <title>POSTURE ENFORCER</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet"/>
   <style>
     :root {
@@ -28,6 +28,7 @@
       align-items: center;
       flex-direction: column;
       transition: background-color 0.2s, color 0.2s;
+      position: relative;
     }
 
     h1, h2 {
@@ -59,7 +60,6 @@
 
     #alert h1 {
       font-size: 3rem;
-      color: var(--accent);
       margin-bottom: 1.5rem;
     }
 
@@ -69,18 +69,50 @@
       opacity: 0.8;
     }
 
-    .flashing {
-      animation: flash 0.5s infinite;
+    #epilepsyWarning {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: red;
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 0.25rem;
+      font-size: 0.9rem;
+      font-weight: bold;
+      z-index: 999;
+      display: none;
     }
 
-    @keyframes flash {
-      0%   { background-color: black; color: yellow; }
-      50%  { background-color: yellow; color: black; }
-      100% { background-color: black; color: yellow; }
+    .flashing {
+      animation: flashBG 0.25s infinite;
+    }
+
+    .flashing * {
+      animation: flashText 0.25s infinite;
+    }
+
+    @keyframes flashBG {
+      0%, 100% { background-color: black; color: yellow; }
+      50%      { background-color: yellow; color: black; }
+    }
+
+    @keyframes flashText {
+      0%, 100% {
+        background-color: black !important;
+        color: yellow !important;
+        border-color: yellow !important;
+      }
+      50% {
+        background-color: yellow !important;
+        color: black !important;
+        border-color: black !important;
+      }
     }
   </style>
 </head>
 <body>
+  <div id="epilepsyWarning">⚠ PHOTOSENSITIVE EPILEPSY WARNING</div>
+
   <button id="startButton">Start Posture Watch</button>
 
   <div id="alert">
@@ -90,7 +122,7 @@
 
   <div id="countdown"></div>
 
-  <audio id="alertSound" src="999-social-credit-siren.mp3"></audio>
+  <audio id="alertSound" src="999-social-credit-siren.mp3" loop></audio>
 
   <script>
     const startButton = document.getElementById("startButton");
@@ -98,13 +130,12 @@
     const alertDiv = document.getElementById("alert");
     const alertSound = document.getElementById("alertSound");
     const countdownDisplay = document.getElementById("countdown");
+    const epilepsyWarning = document.getElementById("epilepsyWarning");
 
     let nextTriggerTime;
     let countdownInterval;
-    let reminderTimeout;
-    let flashing = false;
 
-    const REMINDER_INTERVAL_MS = 0.5* 60 * 1000; // 15 minutes
+    const REMINDER_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
 
     function formatTime(ms) {
       const totalSeconds = Math.floor(ms / 1000);
@@ -136,6 +167,7 @@
       alertSound.play();
       alertDiv.style.display = "flex";
       document.body.classList.add("flashing");
+      epilepsyWarning.style.display = "block";
     }
 
     function stopReminder() {
@@ -143,6 +175,7 @@
       alertSound.currentTime = 0;
       alertDiv.style.display = "none";
       document.body.classList.remove("flashing");
+      epilepsyWarning.style.display = "none";
       scheduleReminder();
     }
 
