@@ -39,7 +39,7 @@
       position: relative;
     }
 
-    #startButton, #confirmButton {
+    button {
       font-size: 1.5rem;
       padding: 1rem 2rem;
       border: none;
@@ -52,7 +52,7 @@
       position: relative;
     }
 
-    #startButton:hover, #confirmButton:hover {
+    button:hover {
       transform: scale(1.05);
       background-color: #ffe53b;
     }
@@ -144,14 +144,13 @@
 
     /* Fullscreen flashing overlay */
     #flashOverlay {
-      pointer-events: none; /* allow clicks to pass through */
+      pointer-events: none; /* allow clicks to pass through except on children */
       position: fixed;
       inset: 0;
       z-index: 9998;
       background-color: black;
       color: yellow;
       display: none;
-      display: flex;
       justify-content: center;
       align-items: center;
       flex-direction: column;
@@ -159,9 +158,11 @@
     }
 
     /* Make all text and buttons inside flashOverlay flash colors too */
-    #flashOverlay * {
+    #flashOverlay.flashing * {
       animation: flashText 0.25s infinite;
       border-color: currentColor !important;
+      pointer-events: auto; /* enable clicking on children buttons */
+      cursor: pointer;
     }
 
     @keyframes flashBG {
@@ -188,14 +189,9 @@
 
   <button id="startButton" style="display:none;">Start Posture Watch</button>
 
-  <div id="alert" style="display:none;">
-    <h1>CHECK YOUR POSTURE</h1>
-    <button id="confirmButton">I Fixed My Posture</button>
-  </div>
-
   <div id="countdown"></div>
 
-  <!-- This overlay covers entire screen and flashes -->
+  <!-- Fullscreen flashing overlay -->
   <div id="flashOverlay" aria-hidden="true">
     <h1>CHECK YOUR POSTURE</h1>
     <button id="confirmButtonOverlay">I Fixed My Posture</button>
@@ -214,9 +210,6 @@
 
   <script>
     const startButton = document.getElementById("startButton");
-    const confirmButton = document.getElementById("confirmButton");
-    const confirmButtonOverlay = document.getElementById("confirmButtonOverlay");
-    const alertDiv = document.getElementById("alert");
     const flashOverlay = document.getElementById("flashOverlay");
     const alertSound = document.getElementById("alertSound");
     const countdownDisplay = document.getElementById("countdown");
@@ -224,6 +217,7 @@
     const intervalModal = document.getElementById("intervalModal");
     const intervalInput = document.getElementById("intervalInput");
     const intervalSubmit = document.getElementById("intervalSubmit");
+    const confirmButtonOverlay = document.getElementById("confirmButtonOverlay");
 
     let nextTriggerTime;
     let countdownInterval;
@@ -258,19 +252,21 @@
     function triggerReminder() {
       alertSound.play();
       flashOverlay.style.display = "flex";
+      flashOverlay.classList.add("flashing");
       epilepsyWarning.style.display = "block";
       startButton.style.display = "none";
-      alertDiv.style.display = "none";
     }
 
     function stopReminder() {
       alertSound.pause();
       alertSound.currentTime = 0;
       flashOverlay.style.display = "none";
+      flashOverlay.classList.remove("flashing");
       epilepsyWarning.style.display = "block";
       scheduleReminder();
     }
 
+    // When user sets interval, hide modal and show start button
     intervalSubmit.addEventListener("click", () => {
       let val = parseInt(intervalInput.value, 10);
       if (isNaN(val) || val < 1 || val > 180) {
@@ -283,16 +279,20 @@
       epilepsyWarning.style.display = "block";
     });
 
+    // Start countdown when start button clicked
     startButton.addEventListener("click", () => {
       startButton.style.display = "none";
       scheduleReminder();
     });
 
+    // Confirm posture button stops flashing and schedules next reminder
     confirmButtonOverlay.addEventListener("click", stopReminder);
 
-    // Also handle confirm button in alertDiv if visible (optional)
-    confirmButton.addEventListener("click", stopReminder);
-
+    // On page load, show modal and epilepsy warning
+    window.onload = () => {
+      intervalModal.style.display = "flex";
+      epilepsyWarning.style.display = "block";
+    };
   </script>
 </body>
 </html>
