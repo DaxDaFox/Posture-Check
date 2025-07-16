@@ -356,6 +356,14 @@
       REMINDER_INTERVAL_MS = val * 60 * 1000;
       intervalModal.style.display = "none";
       startButton.style.display = "inline-block";
+
+      // stop preview audio ie
+      if (previewPlaying) {
+        previewAudio.pause();
+        previewAudio.currentTime = 0;
+        previewPlaying = false;
+      }
+
       popSound.play();
     });
 
