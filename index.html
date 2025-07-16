@@ -113,6 +113,22 @@
       color: #000;
     }
 
+    #intervalSubmit {
+      background-color: #333;
+      border: none;
+      color: white;
+      font-size: 1.5rem;
+      padding: 1rem 2rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-top: 1rem;
+    }
+
+    #intervalSubmit:hover {
+      background-color: #444;
+    }
+
     .sfx-buttons {
       display: flex;
       flex-wrap: wrap;
@@ -204,7 +220,9 @@
       "You Like Femboys": "you-like-femboys.mp3"
     };
 
-    let selectedSound = sfxOptions["Metal Pipe"]; // default
+    let selectedSound = sfxOptions["Metal Pipe"];
+    let previewAudio = new Audio();
+    let previewPlaying = false;
 
     const startButton = document.getElementById("startButton");
     const flashOverlay = document.getElementById("flashOverlay");
@@ -220,16 +238,31 @@
     let countdownInterval;
     let REMINDER_INTERVAL_MS;
 
-    // Dynamically create SFX selector buttons
     for (let [label, file] of Object.entries(sfxOptions)) {
       const btn = document.createElement("button");
       btn.textContent = label;
+
       btn.onclick = () => {
         selectedSound = file;
-        [...soundButtonsContainer.children].forEach(b => b.style.background = "var(--accent)");
-        btn.style.background = "#4ade80"; // green highlight
         alertSound.src = selectedSound;
+
+        [...soundButtonsContainer.children].forEach(b => b.style.background = "var(--accent)");
+        btn.style.background = "#4ade80";
+
+        if (previewPlaying) {
+          previewAudio.pause();
+          previewAudio.currentTime = 0;
+        }
+
+        previewAudio = new Audio(file);
+        previewAudio.play();
+        previewPlaying = true;
+
+        previewAudio.onended = () => {
+          previewPlaying = false;
+        };
       };
+
       soundButtonsContainer.appendChild(btn);
     }
 
@@ -290,9 +323,6 @@
     });
 
     confirmButtonOverlay.addEventListener("click", stopReminder);
-
-    // Preload default
-    alertSound.src = selectedSound;
 
     window.onload = () => {
       intervalModal.style.display = "flex";
