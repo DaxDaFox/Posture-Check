@@ -93,6 +93,7 @@
       margin-right: auto;
     }
 
+    /* Prevent line breaks, keep single line, with ellipsis if needed */
     #soundDisplay {
       margin-top: 1rem;
       font-size: 1.1em;
@@ -104,7 +105,9 @@
       z-index: 1;
       max-width: 90vw;
       padding: 0 1vw;
-      word-break: break-word;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     #epilepsyWarning {
