@@ -30,11 +30,10 @@
       transition: background-color 0.2s, color 0.2s;
       position: relative;
       overflow: hidden;
-      font-size: 4vw; /* scale font size relative to viewport width */
+      font-size: 4vw;
       min-font-size: 12px;
     }
 
-    /* Prevent font size from getting too small or too large */
     @media (max-width: 400px) {
       body, html {
         font-size: 14px !important;
@@ -77,6 +76,7 @@
       background-color: #ffe53b;
     }
 
+    /* Fix countdown container width to avoid jitter */
     #countdown {
       margin-top: 1rem;
       font-size: 1.25em;
@@ -86,6 +86,11 @@
       max-width: 90vw;
       text-align: center;
       word-break: break-word;
+      width: 10ch;  /* fixed width to fit mm:ss nicely */
+      min-width: 10ch;
+      /* horizontally center */
+      margin-left: auto;
+      margin-right: auto;
     }
 
     #soundDisplay {
@@ -402,7 +407,6 @@
       intervalModal.style.display = "none";
       startButton.style.display = "inline-block";
 
-      // Stop preview audio if playing
       if (previewPlaying) {
         previewAudio.pause();
         previewAudio.currentTime = 0;
