@@ -94,22 +94,20 @@
     }
 
     /* Prevent line breaks, keep single line, with ellipsis if needed */
-  #soundDisplay {
-  margin-top: 1rem;
-  font-size: 1.1em;
-  text-align: center;
+ #soundDisplay {
   position: absolute;
   bottom: 20px;
-  left: 0;
-  right: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 90vw;
   padding: 0 1rem;
-  z-index: 1;
+  font-size: 1.1em;
   white-space: nowrap;
-  overflow-x: auto;
-  overflow-y: hidden;
-  -webkit-overflow-scrolling: touch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+  z-index: 1;
 }
-
 
     #epilepsyWarning {
       position: fixed;
