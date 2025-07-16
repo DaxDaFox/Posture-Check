@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -189,6 +189,25 @@
         border-color: black !important;
       }
     }
+
+    .ripple {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      pointer-events: none;
+      transform: scale(0);
+      animation: rippleEffect 0.5s ease-out forwards;
+      z-index: 9999;
+    }
+
+    @keyframes rippleEffect {
+      to {
+        transform: scale(4);
+        opacity: 0;
+      }
+    }
   </style>
 </head>
 <body>
@@ -346,11 +365,19 @@
 
     confirmButtonOverlay.addEventListener("click", stopReminder);
 
-    window.addEventListener("click", () => {
+    window.addEventListener("click", (e) => {
       if (clickPopActive) {
         popSound.currentTime = 0;
         popSound.play();
       }
+
+      const ripple = document.createElement("div");
+      ripple.className = "ripple";
+      document.body.appendChild(ripple);
+      const size = 30;
+      ripple.style.left = `${e.clientX - size / 2}px`;
+      ripple.style.top = `${e.clientY - size / 2}px`;
+      setTimeout(() => ripple.remove(), 500);
     });
 
     window.onload = () => {
