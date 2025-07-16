@@ -40,8 +40,9 @@
     }
 
     button {
-      font-size: 1.5rem;
-      padding: 1rem 2rem;
+      font-size: 1rem;
+      padding: 0.75rem 1.25rem;
+      margin: 0.5rem;
       border: none;
       border-radius: 0.5rem;
       background-color: var(--accent);
@@ -55,14 +56,6 @@
     button:hover {
       transform: scale(1.05);
       background-color: #ffe53b;
-    }
-
-    #alert {
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      z-index: 1;
-      position: relative;
     }
 
     #countdown {
@@ -87,7 +80,6 @@
       user-select: none;
     }
 
-    /* Modal styling */
     #intervalModal {
       position: fixed;
       inset: 0;
@@ -105,14 +97,8 @@
       text-align: center;
       color: var(--fg);
       box-shadow: 0 0 15px var(--accent);
-      max-width: 320px;
-      width: 90%;
-    }
-
-    #intervalContent label {
-      font-size: 1.2rem;
-      display: block;
-      margin-bottom: 1rem;
+      max-width: 400px;
+      width: 95%;
     }
 
     #intervalInput {
@@ -127,24 +113,19 @@
       color: #000;
     }
 
-    #intervalSubmit {
-      background-color: var(--accent);
-      border: none;
-      color: #000;
-      font-size: 1.25rem;
-      padding: 0.75rem 1.5rem;
-      border-radius: 0.5rem;
-      cursor: pointer;
-      transition: background 0.2s;
+    .sfx-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 1rem;
     }
 
-    #intervalSubmit:hover {
-      background-color: #ffe53b;
+    .sfx-buttons button {
+      font-size: 0.85rem;
     }
 
-    /* Fullscreen flashing overlay */
     #flashOverlay {
-      pointer-events: none; /* allow clicks to pass through except on children */
+      pointer-events: none;
       position: fixed;
       inset: 0;
       z-index: 9998;
@@ -157,11 +138,10 @@
       animation: flashBG 0.25s infinite;
     }
 
-    /* Make all text and buttons inside flashOverlay flash colors too */
     #flashOverlay.flashing * {
       animation: flashText 0.25s infinite;
       border-color: currentColor !important;
-      pointer-events: auto; /* enable clicking on children buttons */
+      pointer-events: auto;
       cursor: pointer;
     }
 
@@ -188,40 +168,70 @@
   <div id="epilepsyWarning">⚠ PHOTOSENSITIVE EPILEPSY WARNING</div>
 
   <button id="startButton" style="display:none;">Start Posture Watch</button>
-
   <div id="countdown"></div>
 
-  <!-- Fullscreen flashing overlay -->
-  <div id="flashOverlay" aria-hidden="true">
+  <div id="flashOverlay">
     <h1>CHECK YOUR POSTURE</h1>
     <button id="confirmButtonOverlay">I Fixed My Posture</button>
   </div>
 
-  <audio id="alertSound" src="999-social-credit-siren.mp3" loop></audio>
+  <audio id="alertSound" loop></audio>
 
-  <!-- Modal -->
   <div id="intervalModal">
     <div id="intervalContent">
       <label for="intervalInput">Set reminder interval (minutes):</label>
       <input type="number" id="intervalInput" min="1" max="180" value="15" />
+
+      <h3 style="margin-top: 1rem;">Choose Your Sound:</h3>
+      <div class="sfx-buttons" id="soundButtons"></div>
+
       <button id="intervalSubmit">Set Timer</button>
     </div>
   </div>
 
   <script>
+    const sfxOptions = {
+      "Among Us": "among-us-role-reveal-sound.mp3",
+      "Wow!": "anime-wow-sound-effect.mp3",
+      "Discord": "discord-notification.mp3",
+      "Fart": "dry-fart.mp3",
+      "Metal Pipe": "metal-pipe-clang.mp3",
+      "Nintendo Startup": "nintendo-game-boy-startup.mp3",
+      "Pew Pew": "pew_pew-dknight556-1379997159.mp3",
+      "Rizz SFX": "rizz-sound-effect.mp3",
+      "Spongebob Fail": "spongebob-fail.mp3",
+      "Vine Boom": "vine-boom.mp3",
+      "You Like Femboys": "you-like-femboys.mp3"
+    };
+
+    let selectedSound = sfxOptions["Metal Pipe"]; // default
+
     const startButton = document.getElementById("startButton");
     const flashOverlay = document.getElementById("flashOverlay");
     const alertSound = document.getElementById("alertSound");
     const countdownDisplay = document.getElementById("countdown");
-    const epilepsyWarning = document.getElementById("epilepsyWarning");
     const intervalModal = document.getElementById("intervalModal");
     const intervalInput = document.getElementById("intervalInput");
     const intervalSubmit = document.getElementById("intervalSubmit");
     const confirmButtonOverlay = document.getElementById("confirmButtonOverlay");
+    const soundButtonsContainer = document.getElementById("soundButtons");
 
     let nextTriggerTime;
     let countdownInterval;
     let REMINDER_INTERVAL_MS;
+
+    // Dynamically create SFX selector buttons
+    for (let [label, file] of Object.entries(sfxOptions)) {
+      const btn = document.createElement("button");
+      btn.textContent = label;
+      btn.onclick = () => {
+        selectedSound = file;
+        [...soundButtonsContainer.children].forEach(b => b.style.background = "var(--accent)");
+        btn.style.background = "#4ade80"; // green highlight
+        alertSound.src = selectedSound;
+      };
+      soundButtonsContainer.appendChild(btn);
+    }
 
     function formatTime(ms) {
       const totalSeconds = Math.floor(ms / 1000);
@@ -253,8 +263,6 @@
       alertSound.play();
       flashOverlay.style.display = "flex";
       flashOverlay.classList.add("flashing");
-      epilepsyWarning.style.display = "block";
-      startButton.style.display = "none";
     }
 
     function stopReminder() {
@@ -262,11 +270,9 @@
       alertSound.currentTime = 0;
       flashOverlay.style.display = "none";
       flashOverlay.classList.remove("flashing");
-      epilepsyWarning.style.display = "block";
       scheduleReminder();
     }
 
-    // When user sets interval, hide modal and show start button
     intervalSubmit.addEventListener("click", () => {
       let val = parseInt(intervalInput.value, 10);
       if (isNaN(val) || val < 1 || val > 180) {
@@ -276,22 +282,20 @@
       REMINDER_INTERVAL_MS = val * 60 * 1000;
       intervalModal.style.display = "none";
       startButton.style.display = "inline-block";
-      epilepsyWarning.style.display = "block";
     });
 
-    // Start countdown when start button clicked
     startButton.addEventListener("click", () => {
       startButton.style.display = "none";
       scheduleReminder();
     });
 
-    // Confirm posture button stops flashing and schedules next reminder
     confirmButtonOverlay.addEventListener("click", stopReminder);
 
-    // On page load, show modal and epilepsy warning
+    // Preload default
+    alertSound.src = selectedSound;
+
     window.onload = () => {
       intervalModal.style.display = "flex";
-      epilepsyWarning.style.display = "block";
     };
   </script>
 </body>
